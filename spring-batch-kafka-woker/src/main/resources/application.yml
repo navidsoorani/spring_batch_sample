@@ -1,0 +1,36 @@
+spring:
+  datasource:
+    url: jdbc:oracle:thin:@//172.30.41.24:1521/CCR_STAGE2
+    username: CCR_STAGE2
+    password: fMccrstag2403
+    driver-class-name: oracle.jdbc.OracleDriver
+
+  sql:
+    init:
+      mode: never
+      platform: h2
+      schema-locations: classpath:schema-oracle.sql
+
+  batch:
+    jdbc:
+      initialize-schema: never
+
+  jpa:
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: none
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+
+server:
+  port: 2526
+
+logging:
+  level:
+    org.springframework.jdbc.core: DEBUG
+    org.springframework.batch.core.repository.dao: DEBUG
