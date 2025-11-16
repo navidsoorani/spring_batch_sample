@@ -1,39 +1,23 @@
-Master-Worker Spring Batch with Kafka
-+----------------+                       +----------------+
-|   Master App   |                       |   Worker App   |
-| (Spring Batch) |                       | (Spring Batch) |
-+----------------+                       +----------------+
-        |                                         |
-        |         Partitioning Job                |
-        |---------------------------------------->|
-        |                                         |
-        |  1. MasterStep divides work into        |
-        |     PartitionRequests (start, end, id) |
-        |                                         |
-        |  2. Send PartitionRequest messages      |
-        |     to Kafka Topic "partitions"        |
-        |---------------------------------------->|
-        |                                         |
-        |                                         |
-        |                                 +-------------------+
-        |                                 | Kafka Topic       |
-        |                                 | "partitions"      |
-        |                                 | Partitions: 0..3 |
-        |                                 +-------------------+
-        |                                         |
-        |                                         |
-        |  3. Worker KafkaListener consumes       |
-        |     PartitionRequest from Kafka        |
-        |                                         |
-        |--------------------------------------->|
-        |                                         |
-        |  4. Worker launches Job/Step            |
-        |     with JobParameters from message    |
-        |                                         |
-        |  5. WorkerStep executes tasklet        |
-        |     using start/end values             |
-        |                                         |
-        |  6. Writes progress to Spring Batch DB |
-        |                                         |
-        |                                         |
-        +----------------------------------------+
+Flow explanation
+
+Master application:
+Has partitionJob → masterStep.
+Splits work into chunks (PartitionRequest), e.g., start/end indices.
+Sends each partition request as a message to Kafka.
+
+Kafka:
+Topic partitions with multiple partitions (0..N).
+Distributes messages among worker consumers.
+
+Worker application:
+Has a WorkerKafkaListener consuming messages.
+Each message triggers a Job launch.
+Step (workerStep) processes the chunk.
+
+Updates Batch tables (e.g., BATCH_JOB_EXECUTION, BATCH_STEP_EXECUTION).
+
+Scaling:
+Multiple worker instances can consume from the same topic.
+Kafka partitions ensure load balancing.
+
+Spring Batch JobRepository ensures job executions are tracked.
